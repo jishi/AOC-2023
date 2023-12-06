@@ -14,6 +14,7 @@ const seeds = seedData.split(' ').map(Number);
 
 const seedRanges = [];
 
+// Parsing seed ranges
 seeds.forEach((x, i) => {
   if (i % 2 == 1) return;
   seedRanges.push({
@@ -22,6 +23,11 @@ seeds.forEach((x, i) => {
   });
 });
 
+// parsing mappings, keep them in an incremental array, i.e (destination is not used, only offset is relevant)
+// [
+//    { offset: -2, source: { start: 0, end: 123456 } },
+//    ...
+// ]
 chunks.forEach(x => {
   const lines = x.split('\n');
 
@@ -36,16 +42,13 @@ chunks.forEach(x => {
         start: values[1],
         end: values[1] + values[2] - 1,
 
-      },
-      destination: {
-        start: values[0],
-        end: values[0] + values[2] - 1,
-      },
+      }
     });
   });
   maps.push(_maps);
 });
 
+// recursive function to traverse the splitting of seed ranges
 function findLowestOfRange(mapIndex, range) {
   const _maps = maps[mapIndex];
 
@@ -66,6 +69,7 @@ function findLowestOfRange(mapIndex, range) {
   });
 
   let newRange = range;
+  // Populate with superfluous ranges that didn't fit into the matched map, since these needs to be re-run for the same mapping level (e.g seed-to-soil)
   const otherRanges = [];
 
   if (matchedMap) {
@@ -82,6 +86,9 @@ function findLowestOfRange(mapIndex, range) {
       otherRanges.push({ start: range.start, end: matchedMap.source.start-1});
     }
   }
+
+  // Run the new range against the next mapping (mapIndex + 1, soil-to-fertilizer), and the superfluous ranges against the same level of mapping since they weren't mapped against other potential maps (e.g seed-to-soil)
+  // We only care about the lowest value candidate in the end.
   const lowest = Math.min(findLowestOfRange(mapIndex+1, newRange), ...otherRanges.map(x => findLowestOfRange(mapIndex, x)));
   return lowest;
 
