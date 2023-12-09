@@ -41,7 +41,6 @@ chunks.forEach(x => {
       source: {
         start: values[1],
         end: values[1] + values[2] - 1,
-
       }
     });
   });
